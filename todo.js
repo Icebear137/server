@@ -1,67 +1,72 @@
 const express = require('express');
-const db = new (require('simple-json-db'))('notes.json');
-const { v4: uuidv4 } = require('uuid');
-uuidv4();
+const mongoose = require('mongoose');
+const dotenv = require('dotenv');
+
+dotenv.config();
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT;
 
-app.use(express.json()); 
+mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
+
+const noteSchema = new mongoose.Schema({
+  title: String,
+  content: String,
+  create_date: { type: Date, default: Date.now },
+});
+
+const Note = mongoose.model('Note', noteSchema);
+
+app.use(express.json());
 
 // Lấy danh sách các ghi chú
-app.get('/notes', (req, res) => {
-  const notes = db.JSON();
-  res.json(notes);
+app.get('/notes', async (req, res) => {
+  try {
+    const notes = await Note.find({},{__v:false});
+    res.json(notes);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // Tạo ghi chú mới
-app.post('/notes', (req, res) => {
+app.post('/notes', async (req, res) => {
   const { title, content } = req.body;
-  const id = uuidv4();
-  const create_date = new Date().toISOString();
-  console.log(req.body);
-  const newNote = {
-    id,
-    title,
-    content,
-    create_date,
-  };
 
-  db.set(title, newNote);
-  res.json(newNote);
+  try {
+    const newNote = await Note.create({ title, content });
+    res.json(newNote);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // Sửa ghi chú
-app.put('/notes/:id', (req, res) => {
+app.put('/notes/:id', async (req, res) => {
   const { id } = req.params;
   const { title, content } = req.body;
 
-  if (!db.has(id)) {
-    return res.status(404).json({ error: 'Note not found' });
+  try {
+    const updatedNote = await Note.findByIdAndUpdate(id, { title, content }, { new: true });
+    res.json(updatedNote);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
-
-  const updatedNote = {
-    id,
-    title,
-    content,
-    create_date: db.get(id).create_date,
-  };
-
-  db.set(id, updatedNote);
-  res.json(updatedNote);
 });
 
 // Xoá ghi chú
-app.delete('/notes/:id', (req, res) => {
+app.delete('/notes/:id', async (req, res) => {
   const { id } = req.params;
 
-  if (!db.has(id)) {
-    return res.status(404).json({ error: 'Note not found' });
+  try {
+    const deletedNote = await Note.findByIdAndDelete(id);
+    res.json(deletedNote);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
-
-  const deletedNote = db.get(id);
-  db.delete(id);
-  res.json(deletedNote);
 });
 
 app.listen(port, () => {
