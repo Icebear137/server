@@ -1,10 +1,12 @@
 // src/controllers/authController.js
 const User = require('../models/userModal');
+const { v4: uuidv4 } = require('uuid');
 const { generateToken } = require('../auth/token');
+uuidv4();
+
 
 exports.signup = async (req, res) => {
   const { username, password } = req.body;
-
   try {
     const user = await User.create({ username, password });
     const token = generateToken(user);

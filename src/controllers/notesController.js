@@ -2,7 +2,6 @@ const Note = require('../models/noteModel');
 
 exports.getAllNotes = async (req, res) => {
   const { userId } = req; // Lấy userId từ token hoặc session
-
   try {
     const notes = await Note.find({ user: userId });
     res.json(notes);
@@ -12,11 +11,10 @@ exports.getAllNotes = async (req, res) => {
 };
 
 exports.createNote = async (req, res) => {
-  const { content } = req.body;
-  const { userId } = req; // Lấy userId từ token hoặc session
-
+  const { title, content } = req.body;
+  const { userId } = req; 
   try {
-    const newNote = await Note.create({ user: userId, content });
+    const newNote = await Note.create({ user: userId, title, content });
     res.json(newNote);
   } catch (error) {
     res.status(500).json({ error: error.message });
