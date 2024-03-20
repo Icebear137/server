@@ -1,10 +1,12 @@
+// src/routes/notes.js
 const express = require('express');
 const router = express.Router();
 const notesController = require('../controllers/notesController');
+const authMiddleware = require('../middleware/authMiddleware');
 
-router.get('/', notesController.getAllNotes);
-router.post('/', notesController.createNote);
-router.put('/:id', notesController.updateNote);
-router.delete('/:id', notesController.deleteNote);
+router.get('/', authMiddleware.requireAuth, notesController.getAllNotes);
+router.post('/', authMiddleware.requireAuth, notesController.createNote);
+router.put('/:id', authMiddleware.requireAuth, notesController.updateNote);
+router.delete('/:id', authMiddleware.requireAuth, notesController.deleteNote);
 
 module.exports = router;
