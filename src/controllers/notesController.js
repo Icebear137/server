@@ -24,10 +24,17 @@ exports.createNote = async (req, res) => {
 exports.updateNote = async (req, res) => {
   const { id } = req.params;
   const { title, content } = req.body;
+  const { userId } = req;
 
   try {
-    const updatedNote = await Note.findByIdAndUpdate(id, { title, content }, { new: true });
-    res.json(updatedNote);
+    const note = await Note.findById(id);
+    if (note.user.toString() !== userId) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }else 
+    {
+      const updatedNote = await Note.findByIdAndUpdate(id, { title, content }, { new: true });
+      res.json(updatedNote);
+    }
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -35,10 +42,17 @@ exports.updateNote = async (req, res) => {
 
 exports.deleteNote = async (req, res) => {
   const { id } = req.params;
+  const { userId } = req;
 
   try {
-    const deletedNote = await Note.findByIdAndDelete(id);
-    res.json(deletedNote);
+    const note = await Note.findById(id);
+    if (note.user.toString() !== userId) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+    else{
+      const deletedNote = await Note.findByIdAndDelete(id);
+      res.json(deletedNote);
+    }
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
